@@ -1,6 +1,7 @@
 const net = require('net');
 
 const client  = new net.Socket();
+client.setEncoding('utf8');
 client.connect(6969, '127.0.0.1', function() {
 
   //Print that the client sucessfully connected to the server
@@ -13,7 +14,7 @@ client.connect(6969, '127.0.0.1', function() {
     //As long as the input isn't null, write message on clients side and pass message
     //to the server
     if(chunk !== null) {
-      process.stdout.write(clientAddress + " : " + chunk);
+      // process.stdout.write( " : " + chunk);
       client.write(chunk);
     }
   });
