@@ -1,7 +1,9 @@
 const net = require('net');
 
 const clients = [];
+const clientUsernames = ["admin"];
 const server = net.createServer();
+// server.setEncoding('utf8');
 server.listen(6969, '127.0.0.1', () => {
   console.log("Server listening on "+server.address().address+":"+server.address().port);
 });
@@ -30,8 +32,7 @@ server.on('connection', function(socket) {
   //ADMIN MESSAGES
   //add comments
   process.stdin.setEncoding('utf8');
-  process.stdin.on('readable', () => {
-    var chunk = process.stdin.read();
+  process.stdin.on('data', (chunk) => {
     //As long as the input isn't null, write message on clients side and pass message
     //to the server
     if(chunk !== null) {
@@ -51,10 +52,16 @@ server.on('connection', function(socket) {
   //When recieving data, broadcast message to all clients
   socket.on('data', (data) => {
     if(newClient.username === null) {
-      newClient.username = data.slice(0, data.length - 1);
-      socket.write("Welcome to the chat room, " + newClient.username + ".\n");
-      broadcast(newClient.username + " has joined the chat room.\n");
-      process.stdout.write(socket.remoteAddress + ":" + socket.remotePort + " is now " + newClient.username + ".\n");
+      var username = data.slice(0, data.length - 1);
+      if(clientUsernames.indexOf(username) === -1) {
+        newClient.username = username;
+        clientUsernames.push(username);
+        socket.write("Welcome to the chat room, " + newClient.username + ".\n");
+        broadcast(newClient.username + " has joined the chat room.\n");
+        process.stdout.write(socket.remoteAddress + ":" + socket.remotePort + " is now " + newClient.username + ".\n");
+      } else {
+        socket.write("That username is already taken, try again: ");
+      }
     } else {
       process.stdout.write("SERVER BROADCAST FROM " + findClient(socket).username + " : " + data);
       broadcast(findClient(socket).username + " : " + data);
@@ -74,6 +81,7 @@ server.on('connection', function(socket) {
 
     process.stdout.write(closedClient.username + " left the chat.\n");
     clients.splice(clients.indexOf(closedClient), 1);
+    clientUsernames.splice(clientUsernames.indexOf(closedClient.username), 1);
     broadcast(closedClient.username + " left the chat.\n");
   });
 
@@ -86,6 +94,10 @@ server.on('connection', function(socket) {
   }
 
 });
+
+// server.on('data', (data) => {
+//   process.stdout.write("hello");
+// });
 
 
 
